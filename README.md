@@ -1,17 +1,18 @@
 # steam-market
 
-Steam market API client. Designed for use with [steam-user](https://github.com/DoctorMcKay/node-steam-user).
+Steam market API client. Designed for use with
+[steam-user](https://github.com/DoctorMcKay/node-steam-user).
 
-If you are creating a bot for Steam, you may need more
-suitable [steam-robot](https://github.com/vladislav-puzyrev/steam-robot).
+This package is intended for educational purposes only. Use it at your own risk,
+automation on the community market is prohibited by the rules of the Steam
+subscriber agreement:
 
-This package is intended for educational purposes only. Use it at your own risk, automation on
-the community market is prohibited by the rules of the Steam subscriber agreement:
+> You may not use Cheats, automation software (bots), mods, hacks, or any other
+> unauthorized third-party software, to modify or automate any Subscription
+> Marketplace process.
 
-> You may not use Cheats, automation software (bots), mods, hacks, or any other unauthorized third-party software, to
-> modify or automate any Subscription Marketplace process.
-
-TypeDoc documentation is available on [wiki](https://github.com/vladislav-puzyrev/steam-market/wiki).
+TypeDoc documentation is available on
+[wiki](https://github.com/vladislav-puzyrev/steam-market/wiki).
 
 ## Install
 
@@ -38,7 +39,7 @@ const market = new SteamMarket()
 
 // If necessary, set the currency and language
 market.setCurrency(ECurrencyCode.RUB) // Default ECurrencyCode.USD
-market.setCountry('RU')               // Default 'US'
+market.setCountry('RU') // Default 'US'
 
 // Use only methods available without login
 const appId = 730
@@ -53,7 +54,11 @@ const priceHistory = await listings.priceHistory()
 console.log('itemNameId', itemNameId)
 console.log('priceHistory', priceHistory.success)
 
-const itemOrdersHistogram = await market.itemOrdersHistogram(appId, marketHashName, itemNameId)
+const itemOrdersHistogram = await market.itemOrdersHistogram(
+  appId,
+  marketHashName,
+  itemNameId,
+)
 console.log('itemOrdersHistogram', itemOrdersHistogram.success)
 
 const priceOverview = await market.priceOverview(appId, marketHashName)
@@ -73,7 +78,7 @@ const market = new SteamMarket()
 client.logOn({
   accountName: 'username',
   password: 'password',
-  twoFactorCode: SteamTotp.generateAuthCode('sharedSecret')
+  twoFactorCode: SteamTotp.generateAuthCode('sharedSecret'),
 })
 
 // Waiting for all client object events to set up market before using it
@@ -95,7 +100,7 @@ await Promise.all([
       market.setCountry(country)
       resolve()
     })
-  })
+  }),
 ])
 
 // Also set the vanityURL after initializing the client object
@@ -118,7 +123,7 @@ console.log('myHistory', myHistory.success)
 const createBuyOrder = await market.createBuyOrder(appId, {
   marketHashName,
   price: 50,
-  amount: 1
+  amount: 1,
 })
 const buyOrderId = createBuyOrder.buyOrderId
 console.log('createBuyOrder', createBuyOrder.success)
@@ -129,11 +134,15 @@ const createSellOrder = await market.createSellOrder(appId, {
   assetId,
   contextId,
   price: 250,
-  amount: 1
+  amount: 1,
 })
 console.log('createSellOrder', createSellOrder.success)
 
-const buyOrderStatus = await market.buyOrderStatus(appId, marketHashName, buyOrderId)
+const buyOrderStatus = await market.buyOrderStatus(
+  appId,
+  marketHashName,
+  buyOrderId,
+)
 console.log('buyOrderStatus', buyOrderStatus.success)
 
 const cancelBuyOrder = await market.cancelBuyOrder(buyOrderId)
@@ -147,10 +156,9 @@ console.log('cancelSellOrder', cancelSellOrder)
 ## See also
 
 | Module                                                                                   | Description                                                             | Author            |
-|------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|-------------------|
+| ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ----------------- |
 | [steam-totp](https://github.com/DoctorMcKay/node-steam-totp)                             | Lightweight module to generate Steam-style TOTP auth codes              | DoctorMcKay       |
 | [steam-user](https://github.com/DoctorMcKay/node-steam-user)                             | Allows interaction with the Steam network via the Steam client protocol | DoctorMcKay       |
 | [steamcommunity](https://github.com/DoctorMcKay/node-steamcommunity)                     | Interact with various interfaces on Steam Community from Node.js        | DoctorMcKay       |
 | [steam-tradeoffer-manager](https://github.com/DoctorMcKay/node-steam-tradeoffer-manager) | Simple and sane Steam trade offer management                            | DoctorMcKay       |
 | [steam-market](https://github.com/vladislav-puzyrev/steam-market) (YOU HERE)             | Steam market API client                                                 | Vladislav Puzyrev |
-| [steam-robot](https://github.com/vladislav-puzyrev/steam-robot)                          | Steam bots creating based on middlewares                                | Vladislav Puzyrev |

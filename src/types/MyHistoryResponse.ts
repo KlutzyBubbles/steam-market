@@ -1,7 +1,7 @@
-import { type AssetResponse } from './AssetResponse.js'
-import { type ListingResponse } from './ListingResponse.js'
-import { type EventResponse } from './EventResponse.js'
-import { type PurchaseResponse } from './PurchaseResponse.js'
+import type { AssetResponse } from './AssetResponse.js'
+import type { EventResponse } from './EventResponse.js'
+import type { ListingResponse } from './ListingResponse.js'
+import type { PurchaseResponse } from './PurchaseResponse.js'
 
 export interface MyHistoryResponse {
   success: boolean

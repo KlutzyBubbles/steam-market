@@ -1,7 +1,7 @@
-import { type MyListingsResponse } from './MyListingsResponse.js'
-import { type Asset } from './Asset.js'
-import { type Listing } from './Listing.js'
-import { type BuyOrder } from './BuyOrder.js'
+import type { Asset } from './Asset.js'
+import type { BuyOrder } from './BuyOrder.js'
+import type { Listing } from './Listing.js'
+import type { MyListingsResponse } from './MyListingsResponse.js'
 
 export interface MyListings {
   _data: MyListingsResponse

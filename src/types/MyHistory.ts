@@ -1,8 +1,8 @@
-import { type MyHistoryResponse } from './MyHistoryResponse.js'
-import { type Asset } from './Asset.js'
-import { type Listing } from './Listing.js'
-import { type Event } from './Event.js'
-import { type Purchase } from './Purchase.js'
+import type { Asset } from './Asset.js'
+import type { Event } from './Event.js'
+import type { Listing } from './Listing.js'
+import type { MyHistoryResponse } from './MyHistoryResponse.js'
+import type { Purchase } from './Purchase.js'
 
 export interface MyHistory {
   _data: MyHistoryResponse

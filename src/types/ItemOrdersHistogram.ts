@@ -1,4 +1,4 @@
-import { type ItemOrdersHistogramResponse } from './ItemOrdersHistogramResponse.js'
+import type { ItemOrdersHistogramResponse } from './ItemOrdersHistogramResponse.js'
 
 export interface ItemOrdersHistogram {
   _data: ItemOrdersHistogramResponse
@@ -9,16 +9,16 @@ export interface ItemOrdersHistogram {
   buyOrderSummary: string
   highestBuyOrder: number
   lowestSellOrder: number
-  buyOrderGraph: Array<{
+  buyOrderGraph: {
     price: number
     volume: number
     description: string
-  }>
-  sellOrderGraph: Array<{
+  }[]
+  sellOrderGraph: {
     price: number
     volume: number
     description: string
-  }>
+  }[]
   graphMaxY: number
   graphMinX: number
   graphMaxX: number

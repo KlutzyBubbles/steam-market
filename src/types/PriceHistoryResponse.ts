@@ -1,4 +1,4 @@
-import { type PriceResponse } from './PriceResponse.js'
+import type { PriceResponse } from './PriceResponse.js'
 
 export interface PriceHistoryResponse {
   success: boolean

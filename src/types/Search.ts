@@ -1,5 +1,5 @@
-import { type SearchResponse } from './SearchResponse.js'
-import { type SearchResult } from './SearchResult.js'
+import type { SearchResponse } from './SearchResponse.js'
+import type { SearchResult } from './SearchResult.js'
 
 export interface Search {
   _data: SearchResponse

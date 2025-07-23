@@ -1,5 +1,5 @@
-import { type PriceHistoryResponse } from './PriceHistoryResponse.js'
-import { type Price } from './Price.js'
+import type { Price } from './Price.js'
+import type { PriceHistoryResponse } from './PriceHistoryResponse.js'
 
 export interface PriceHistory<T = PriceHistoryResponse> {
   _data: T

@@ -39,5 +39,5 @@ export enum ECurrencyCode {
   KWD = 38,
   QAR = 39,
   CRC = 40,
-  UYU = 41
+  UYU = 41,
 }

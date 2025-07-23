@@ -1,4 +1,4 @@
-import { type SearchResultResponse } from './SearchResultResponse.js'
+import type { SearchResultResponse } from './SearchResultResponse.js'
 
 export interface SearchResponse {
   success: boolean

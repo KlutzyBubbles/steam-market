@@ -1,4 +1,4 @@
-import { type PriceOverviewResponse } from './PriceOverviewResponse.js'
+import type { PriceOverviewResponse } from './PriceOverviewResponse.js'
 
 export interface PriceOverview {
   _data: PriceOverviewResponse

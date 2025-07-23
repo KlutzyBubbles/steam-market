@@ -1,5 +1,5 @@
-import { type Description } from './Description.js'
-import { type Action } from './Action.js'
+import type { Action } from './Action.js'
+import type { Description } from './Description.js'
 
 export interface AssetResponse {
   currency?: number | null

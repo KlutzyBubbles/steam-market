@@ -1,4 +1,4 @@
-import { type BuyOrderStatusResponse } from './BuyOrderStatusResponse.js'
+import type { BuyOrderStatusResponse } from './BuyOrderStatusResponse.js'
 
 export interface BuyOrderStatus {
   _data: BuyOrderStatusResponse

@@ -1,37 +1,38 @@
-import axios from 'axios'
-import proxyParser from 'proxy-string-parser'
+import axios, { type AxiosProxyConfig } from 'axios'
 import ISO4217 from 'currency-codes'
 import ISO6391 from 'iso-639-1'
+
+import type { Asset } from './types/Asset.js'
+import type { AssetResponse } from './types/AssetResponse.js'
+import type { BuyOrderStatus } from './types/BuyOrderStatus.js'
+import type { BuyOrderStatusResponse } from './types/BuyOrderStatusResponse.js'
+import type { CreateBuyOrder } from './types/CreateBuyOrder.js'
+import type { CreateBuyOrderOptions } from './types/CreateBuyOrderOptions.js'
+import type { CreateBuyOrderResponse } from './types/CreateBuyOrderResponse.js'
+import type { CreateSellOrder } from './types/CreateSellOrder.js'
+import type { CreateSellOrderOptions } from './types/CreateSellOrderOptions.js'
+import type { CreateSellOrderResponse } from './types/CreateSellOrderResponse.js'
+import type { ItemOrdersHistogram } from './types/ItemOrdersHistogram.js'
+import type { ItemOrdersHistogramResponse } from './types/ItemOrdersHistogramResponse.js'
+import type { Listing } from './types/Listing.js'
+import type { ListingResponse } from './types/ListingResponse.js'
+import type { Listings } from './types/Listings.js'
+import type { ListingsResponse } from './types/ListingsResponse.js'
+import type { MarketOptions } from './types/MarketOptions.js'
+import type { MyHistory } from './types/MyHistory.js'
+import type { MyHistoryResponse } from './types/MyHistoryResponse.js'
+import type { MyListings } from './types/MyListings.js'
+import type { MyListingsResponse } from './types/MyListingsResponse.js'
+import type { PriceHistory } from './types/PriceHistory.js'
+import type { PriceHistoryResponse } from './types/PriceHistoryResponse.js'
+import type { PriceOverview } from './types/PriceOverview.js'
+import type { PriceOverviewResponse } from './types/PriceOverviewResponse.js'
+import type { PriceResponse } from './types/PriceResponse.js'
+import type { Search } from './types/Search.js'
+import type { SearchOptions } from './types/SearchOptions.js'
+import type { SearchResponse } from './types/SearchResponse.js'
+
 import { ECurrencyCode } from './types/ECurrencyCode.js'
-import { type MarketOptions } from './types/MarketOptions.js'
-import { type SearchOptions } from './types/SearchOptions.js'
-import { type CreateBuyOrderOptions } from './types/CreateBuyOrderOptions.js'
-import { type CreateSellOrderOptions } from './types/CreateSellOrderOptions.js'
-import { type Search } from './types/Search.js'
-import { type Listings } from './types/Listings.js'
-import { type ItemOrdersHistogram } from './types/ItemOrdersHistogram.js'
-import { type PriceOverview } from './types/PriceOverview.js'
-import { type PriceHistory } from './types/PriceHistory.js'
-import { type MyListings } from './types/MyListings.js'
-import { type MyHistory } from './types/MyHistory.js'
-import { type CreateBuyOrder } from './types/CreateBuyOrder.js'
-import { type CreateSellOrder } from './types/CreateSellOrder.js'
-import { type BuyOrderStatus } from './types/BuyOrderStatus.js'
-import { type SearchResponse } from './types/SearchResponse.js'
-import { type ListingsResponse } from './types/ListingsResponse.js'
-import { type ItemOrdersHistogramResponse } from './types/ItemOrdersHistogramResponse.js'
-import { type PriceOverviewResponse } from './types/PriceOverviewResponse.js'
-import { type PriceHistoryResponse } from './types/PriceHistoryResponse.js'
-import { type MyListingsResponse } from './types/MyListingsResponse.js'
-import { type MyHistoryResponse } from './types/MyHistoryResponse.js'
-import { type CreateBuyOrderResponse } from './types/CreateBuyOrderResponse.js'
-import { type CreateSellOrderResponse } from './types/CreateSellOrderResponse.js'
-import { type BuyOrderStatusResponse } from './types/BuyOrderStatusResponse.js'
-import { type Asset } from './types/Asset.js'
-import { type Listing } from './types/Listing.js'
-import { type AssetResponse } from './types/AssetResponse.js'
-import { type ListingResponse } from './types/ListingResponse.js'
-import { type PriceResponse } from './types/PriceResponse.js'
 
 class SteamMarket {
   private readonly server
@@ -43,7 +44,7 @@ class SteamMarket {
   private language = 'english'
   private vanityURL = ''
 
-  public constructor (options?: MarketOptions | null) {
+  public constructor(options?: MarketOptions | null) {
     const { additionalHeaders, httpProxy, socksProxy } = options ?? {}
     const proxy = httpProxy ?? socksProxy
 
@@ -51,21 +52,37 @@ class SteamMarket {
       throw new Error('Cannot specify both socksProxy and httpProxy options')
     }
 
+    let proxyConfig: AxiosProxyConfig | false = false
+
+    if (proxy != null) {
+      const proxyUrl = new URL(proxy)
+
+      proxyConfig = {
+        protocol: proxyUrl.protocol,
+        host: proxyUrl.host,
+        port: Number(proxyUrl.port),
+        auth: {
+          username: proxyUrl.username,
+          password: proxyUrl.password,
+        },
+      }
+    }
+
     this.server = axios.create({
       baseURL: 'https://steamcommunity.com/market',
       headers: {
-        Host: 'steamcommunity.com',
-        Accept: 'text/html,*/*;q=0.9',
+        'Host': 'steamcommunity.com',
+        'Accept': 'text/html,*/*;q=0.9',
         'Accept-Encoding': 'gzip,identity,*;q=0',
         'Accept-Charset': 'ISO-8859-1,utf-8,*;q=0.7',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36',
-        ...additionalHeaders
+        ...additionalHeaders,
       },
-      proxy: (proxy != null) ? proxyParser(proxy) : false
+      proxy: proxyConfig,
     })
   }
 
-  private processAsset (asset: AssetResponse): Asset {
+  private processAsset(asset: AssetResponse): Asset {
     return {
       currency: asset.currency,
       appId: asset.appid,
@@ -105,11 +122,13 @@ class SteamMarket {
       marketBuyCountryRestriction: asset.market_buy_country_restriction,
       marketSellCountryRestriction: asset.market_sell_country_restriction,
       appIcon: asset.app_icon,
-      owner: Boolean(asset.owner)
+      owner: Boolean(asset.owner),
     }
   }
 
-  private processAssets (assets: Record<string, Record<string, Record<string, AssetResponse>>>): Asset[] {
+  private processAssets(
+    assets: Record<string, Record<string, Record<string, AssetResponse>>>,
+  ): Asset[] {
     const array: Asset[] = []
 
     Object.values(assets).forEach((i) => {
@@ -123,7 +142,7 @@ class SteamMarket {
     return array
   }
 
-  private processListing (listing: ListingResponse): Listing {
+  private processListing(listing: ListingResponse): Listing {
     return {
       listingId: listing.listingid,
       timeCreated: listing.time_created,
@@ -156,22 +175,24 @@ class SteamMarket {
       convertedSteamFeePerUnit: listing.converted_steam_fee_per_unit,
       convertedPublisherFeePerUnit: listing.converted_publisher_fee_per_unit,
       timeFinishHold: listing.time_finish_hold,
-      timeCreatedStr: listing.time_created_str
+      timeCreatedStr: listing.time_created_str,
     }
   }
 
-  public setCookies (cookies: string[]): void {
-    const sessionId = cookies.find((cookie) => cookie.split('=')[0] === 'sessionid')
+  public setCookies(cookies: string[]): void {
+    const sessionId = cookies.find((cookie) => {
+      return cookie.split('=')[0] === 'sessionid'
+    })
 
     if (sessionId == null) {
       throw new Error('Invalid cookies value')
     }
 
     this.sessionId = sessionId.split('=')[1]
-    this.server.defaults.headers.common.Cookie = cookies.join('; ')
+    this.server.defaults.headers.common['Cookie'] = cookies.join('; ')
   }
 
-  public setCurrency (currency: ECurrencyCode): void {
+  public setCurrency(currency: ECurrencyCode): void {
     const info = ISO4217.code(ECurrencyCode[currency])
 
     if (info == null) {
@@ -183,7 +204,7 @@ class SteamMarket {
     this.currency = currency
   }
 
-  public setCountry (country: string): void {
+  public setCountry(country: string): void {
     const language = ISO6391.getName(country.toLowerCase())
 
     if (language === '') {
@@ -194,44 +215,55 @@ class SteamMarket {
     this.country = country
   }
 
-  public setVanityURL (vanityURL: string): void {
+  public setVanityURL(vanityURL: string): void {
     this.vanityURL = vanityURL
   }
 
-  public getCookies (): string[] {
-    return this.server.defaults.headers.common.Cookie?.toString().split('; ') ?? []
+  public getCookies(): string[] {
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
+    return this.server.defaults.headers.common['Cookie']?.toString().split('; ') ?? []
   }
 
-  public getSessionId (): string {
+  public getSessionId(): string {
     return this.sessionId
   }
 
-  public getCurrency (): ECurrencyCode {
+  public getCurrency(): ECurrencyCode {
     return this.currency
   }
 
-  public getDigits (): number {
+  public getDigits(): number {
     return this.digits
   }
 
-  public getUnits (): number {
+  public getUnits(): number {
     return this.units
   }
 
-  public getCountry (): string {
+  public getCountry(): string {
     return this.country
   }
 
-  public getLanguage (): string {
+  public getLanguage(): string {
     return this.language
   }
 
-  public getVanityURL (): string {
+  public getVanityURL(): string {
     return this.vanityURL
   }
 
-  public async search (appId: number, options?: SearchOptions | null): Promise<Search> {
-    const { query, start, count, searchDescriptions, sortColumn, sortDir } = options ?? {}
+  public async search(
+    appId: number,
+    options?: SearchOptions | null,
+  ): Promise<Search> {
+    const {
+      query,
+      start,
+      count,
+      searchDescriptions,
+      sortColumn,
+      sortDir,
+    } = options ?? {}
 
     const response = await this.server.get<SearchResponse>('/search/render', {
       params: {
@@ -242,13 +274,13 @@ class SteamMarket {
         sort_column: sortColumn ?? 'popular',
         sort_dir: sortDir ?? 'desc',
         appid: appId,
-        norender: '1'
+        norender: '1',
       },
       headers: {
-        Referer: `https://steamcommunity.com/market/search?appid=${appId}`,
+        'Referer': `https://steamcommunity.com/market/search?appid=${appId}`,
         'X-Prototype-Version': '1.7',
-        'X-Requested-With': 'XMLHttpRequest'
-      }
+        'X-Requested-With': 'XMLHttpRequest',
+      },
     })
 
     return {
@@ -263,47 +295,51 @@ class SteamMarket {
         totalCount: response.data.searchdata.total_count,
         pageSize: response.data.searchdata.pagesize,
         prefix: response.data.searchdata.prefix,
-        classPrefix: response.data.searchdata.class_prefix
+        classPrefix: response.data.searchdata.class_prefix,
       },
-      results: response.data.results.map((result) => ({
-        name: result.name,
-        hashName: result.hash_name,
-        sellListings: result.sell_listings,
-        sellPrice: result.sell_price,
-        sellPriceText: result.sell_price_text,
-        appIcon: result.app_icon,
-        appName: result.app_name,
-        assetDescription: {
-          appId: result.asset_description.appid,
-          classId: result.asset_description.classid,
-          instanceId: result.asset_description.instanceid,
-          backgroundColor: result.asset_description.background_color,
-          iconUrl: result.asset_description.icon_url,
-          tradable: Boolean(result.asset_description.tradable),
-          name: result.asset_description.name,
-          nameColor: result.asset_description.name_color,
-          type: result.asset_description.type,
-          marketName: result.asset_description.market_name,
-          marketHashName: result.asset_description.market_hash_name,
-          commodity: Boolean(result.asset_description.commodity)
-        },
-        salePriceText: result.sale_price_text
-      }
-      ))
+      results: response.data.results.map((result) => {
+        return {
+          name: result.name,
+          hashName: result.hash_name,
+          sellListings: result.sell_listings,
+          sellPrice: result.sell_price,
+          sellPriceText: result.sell_price_text,
+          appIcon: result.app_icon,
+          appName: result.app_name,
+          assetDescription: {
+            appId: result.asset_description.appid,
+            classId: result.asset_description.classid,
+            instanceId: result.asset_description.instanceid,
+            backgroundColor: result.asset_description.background_color,
+            iconUrl: result.asset_description.icon_url,
+            tradable: Boolean(result.asset_description.tradable),
+            name: result.asset_description.name,
+            nameColor: result.asset_description.name_color,
+            type: result.asset_description.type,
+            marketName: result.asset_description.market_name,
+            marketHashName: result.asset_description.market_hash_name,
+            commodity: Boolean(result.asset_description.commodity),
+          },
+          salePriceText: result.sale_price_text,
+        }
+      }),
     }
   }
 
-  public async listings (appId: number, marketHashName: string): Promise<Listings> {
+  public async listings(
+    appId: number,
+    marketHashName: string,
+  ): Promise<Listings> {
     const response = await this.server.get<ListingsResponse>(`/listings/${appId}/${marketHashName}`, {
       headers: {
-        Cookie: this.getCookies().filter((cookie) => cookie.split('=')[0] === 'steamLogin').join('; '),
-        Referer: `https://steamcommunity.com/market/search?appid=${appId}`
-      }
+        Cookie: this.getCookies().filter((cookie) => { return cookie.split('=')[0] === 'steamLogin' }).join('; '),
+        Referer: `https://steamcommunity.com/market/search?appid=${appId}`,
+      },
     })
 
     return {
       _data: response.data,
-      async itemNameId (): Promise<number> {
+      async itemNameId(): Promise<number> {
         const self = await this
 
         const startString = 'Market_LoadOrderSpread('
@@ -315,10 +351,14 @@ class SteamMarket {
           throw new Error('Value itemNameId not found')
         }
 
-        const itemNameId = self._data.slice(startPosition + startString.length, endPosition).trim()
+        const itemNameId = self._data.slice(
+          startPosition + startString.length,
+          endPosition,
+        ).trim()
+
         return Number(itemNameId)
       },
-      async priceHistory (): Promise<PriceHistory<string>> {
+      async priceHistory(): Promise<PriceHistory<string>> {
         const self = await this
 
         const startString = 'line1='
@@ -330,49 +370,67 @@ class SteamMarket {
           throw new Error('Value prices not found')
         }
 
-        const slice = self._data.slice(startPosition + startString.length, endPosition).trim()
-        const json: PriceResponse[] = JSON.parse(slice)
-        const prices = json.map((price) => ({
-          datetime: price[0],
-          price: price[1],
-          volume: Number(price[2])
-        }))
+        const slice = self._data.slice(
+          startPosition + startString.length,
+          endPosition,
+        ).trim()
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        const json = JSON.parse(slice) as PriceResponse[]
+        const prices = json.map((price) => {
+          return {
+            datetime: price[0],
+            price: price[1],
+            volume: Number(price[2]),
+          }
+        })
 
         const prefixStartString = 'strFormatPrefix = "'
         const prefixEndString = '";'
         const prefixStartPosition = self._data.indexOf(prefixStartString, 0)
-        const prefixEndPosition = self._data.indexOf(prefixEndString, prefixStartPosition)
+        const prefixEndPosition = self._data.indexOf(
+          prefixEndString,
+          prefixStartPosition,
+        )
 
         const suffixStartString = 'strFormatSuffix = "'
         const suffixEndString = '";'
         const suffixStartPosition = self._data.indexOf(suffixStartString, 0)
-        const suffixEndPosition = self._data.indexOf(suffixEndString, suffixStartPosition)
+        const suffixEndPosition = self._data.indexOf(
+          suffixEndString,
+          suffixStartPosition,
+        )
 
         if (
-          (prefixStartPosition === -1 || prefixEndPosition === -1) ||
-          (suffixStartPosition === -1 || suffixEndPosition === -1)
+          (prefixStartPosition === -1 || prefixEndPosition === -1)
+          || (suffixStartPosition === -1 || suffixEndPosition === -1)
         ) {
           throw new Error('Value pricePrefix not found')
         }
 
-        const pricePrefix = self._data.slice(prefixStartPosition + prefixStartString.length, prefixEndPosition).trim()
-        const priceSuffix = self._data.slice(suffixStartPosition + suffixStartString.length, suffixEndPosition).trim()
+        const pricePrefix = self._data.slice(
+          prefixStartPosition + prefixStartString.length, prefixEndPosition,
+        ).trim()
+
+        const priceSuffix = self._data.slice(
+          suffixStartPosition + suffixStartString.length, suffixEndPosition,
+        ).trim()
 
         return {
           _data: self._data,
           success: true,
           pricePrefix,
           priceSuffix,
-          prices
+          prices,
         }
-      }
+      },
     }
   }
 
-  public async itemOrdersHistogram (
+  public async itemOrdersHistogram(
     appId: number,
     marketHashName: string,
-    itemNameId: number
+    itemNameId: number,
   ): Promise<ItemOrdersHistogram> {
     const response = await this.server.get<ItemOrdersHistogramResponse>('/itemordershistogram', {
       params: {
@@ -380,12 +438,12 @@ class SteamMarket {
         language: this.language,
         currency: this.currency,
         item_nameid: itemNameId,
-        two_factor: '0'
+        two_factor: '0',
       },
       headers: {
-        Referer: `https://steamcommunity.com/market/listings/${appId}/${encodeURIComponent(marketHashName)}`,
-        'X-Requested-With': 'XMLHttpRequest'
-      }
+        'Referer': `https://steamcommunity.com/market/listings/${appId}/${encodeURIComponent(marketHashName)}`,
+        'X-Requested-With': 'XMLHttpRequest',
+      },
     })
 
     return {
@@ -395,38 +453,49 @@ class SteamMarket {
       sellOrderSummary: response.data.sell_order_summary,
       buyOrderTable: response.data.buy_order_table,
       buyOrderSummary: response.data.buy_order_summary,
-      highestBuyOrder: Number((Number(response.data.highest_buy_order) / this.units).toFixed(this.digits)),
-      lowestSellOrder: Number((Number(response.data.lowest_sell_order) / this.units).toFixed(this.digits)),
-      buyOrderGraph: response.data.buy_order_graph.map((buyOrder) => ({
-        price: buyOrder[0],
-        volume: buyOrder[1],
-        description: buyOrder[2]
-      })),
-      sellOrderGraph: response.data.sell_order_graph.map((sellOrder) => ({
-        price: sellOrder[0],
-        volume: sellOrder[1],
-        description: sellOrder[2]
-      })),
+      highestBuyOrder: Number((
+        Number(response.data.highest_buy_order) / this.units
+      ).toFixed(this.digits)),
+      lowestSellOrder: Number((
+        Number(response.data.lowest_sell_order) / this.units
+      ).toFixed(this.digits)),
+      buyOrderGraph: response.data.buy_order_graph.map((buyOrder) => {
+        return {
+          price: buyOrder[0],
+          volume: buyOrder[1],
+          description: buyOrder[2],
+        }
+      }),
+      sellOrderGraph: response.data.sell_order_graph.map((sellOrder) => {
+        return {
+          price: sellOrder[0],
+          volume: sellOrder[1],
+          description: sellOrder[2],
+        }
+      }),
       graphMaxY: response.data.graph_max_y,
       graphMinX: response.data.graph_min_x,
       graphMaxX: response.data.graph_max_x,
       pricePrefix: response.data.price_prefix,
-      priceSuffix: response.data.price_suffix
+      priceSuffix: response.data.price_suffix,
     }
   }
 
-  public async priceOverview (appId: number, marketHashName: string): Promise<PriceOverview> {
+  public async priceOverview(
+    appId: number,
+    marketHashName: string,
+  ): Promise<PriceOverview> {
     const response = await this.server.get<PriceOverviewResponse>('/priceoverview', {
       params: {
         appid: appId,
         currency: this.currency,
-        market_hash_name: marketHashName
+        market_hash_name: marketHashName,
       },
       headers: {
-        Referer: `https://steamcommunity.com/id/${this.vanityURL}/inventory?modal=1&market=1`,
+        'Referer': `https://steamcommunity.com/id/${this.vanityURL}/inventory?modal=1&market=1`,
         'X-Prototype-Version': '1.7',
-        'X-Requested-With': 'XMLHttpRequest'
-      }
+        'X-Requested-With': 'XMLHttpRequest',
+      },
     })
 
     return {
@@ -434,22 +503,25 @@ class SteamMarket {
       success: response.data.success,
       lowestPrice: response.data.lowest_price,
       volume: Number(response.data.volume.split(',').join('')),
-      medianPrice: response.data.median_price
+      medianPrice: response.data.median_price,
     }
   }
 
-  public async priceHistory (appId: number, marketHashName: string): Promise<PriceHistory> {
+  public async priceHistory(
+    appId: number,
+    marketHashName: string,
+  ): Promise<PriceHistory> {
     const response = await this.server.get<PriceHistoryResponse>('/pricehistory', {
       params: {
         appid: appId,
         currency: this.currency,
-        market_hash_name: marketHashName
+        market_hash_name: marketHashName,
       },
       headers: {
-        Referer: `https://steamcommunity.com/id/${this.vanityURL}/inventory?modal=1&market=1`,
+        'Referer': `https://steamcommunity.com/id/${this.vanityURL}/inventory?modal=1&market=1`,
         'X-Prototype-Version': '1.7',
-        'X-Requested-With': 'XMLHttpRequest'
-      }
+        'X-Requested-With': 'XMLHttpRequest',
+      },
     })
 
     return {
@@ -457,26 +529,31 @@ class SteamMarket {
       success: response.data.success,
       pricePrefix: response.data.price_prefix,
       priceSuffix: response.data.price_suffix,
-      prices: response.data.prices.map((price) => ({
-        datetime: price[0],
-        price: price[1],
-        volume: Number(price[2])
-      }))
+      prices: response.data.prices.map((price) => {
+        return {
+          datetime: price[0],
+          price: price[1],
+          volume: Number(price[2]),
+        }
+      }),
     }
   }
 
-  public async myListings (start?: number | null, count?: number | null): Promise<MyListings> {
+  public async myListings(
+    start?: number | null,
+    count?: number | null,
+  ): Promise<MyListings> {
     const response = await this.server.get<MyListingsResponse>('/mylistings', {
       params: {
         start: start ?? '0',
         count: count ?? '100',
-        norender: '1'
+        norender: '1',
       },
       headers: {
-        Referer: 'https://steamcommunity.com/market',
+        'Referer': 'https://steamcommunity.com/market',
         'X-Prototype-Version': '1.7',
-        'X-Requested-With': 'XMLHttpRequest'
-      }
+        'X-Requested-With': 'XMLHttpRequest',
+      },
     })
 
     return {
@@ -487,34 +564,45 @@ class SteamMarket {
       assets: this.processAssets(response.data.assets),
       start: response.data.start,
       numActiveListings: response.data.num_active_listings,
-      listings: response.data.listings.map((listing) => this.processListing(listing)),
-      listingsOnHold: response.data.listings_on_hold.map((listing) => this.processListing(listing)),
-      listingsToConfirm: response.data.listings_to_confirm.map((listing) => this.processListing(listing)),
-      buyOrders: response.data.buy_orders.map((buyOrder) => ({
-        appId: buyOrder.appid,
-        hashName: buyOrder.hash_name,
-        walletCurrency: buyOrder.wallet_currency,
-        price: Number(buyOrder.price),
-        quantity: Number(buyOrder.quantity),
-        quantityRemaining: Number(buyOrder.quantity_remaining),
-        buyOrderId: Number(buyOrder.buy_orderid),
-        description: this.processAsset(buyOrder.description)
-      }))
+      listings: response.data.listings.map((listing) => {
+        return this.processListing(listing)
+      }),
+      listingsOnHold: response.data.listings_on_hold.map((listing) => {
+        return this.processListing(listing)
+      }),
+      listingsToConfirm: response.data.listings_to_confirm.map((listing) => {
+        return this.processListing(listing)
+      }),
+      buyOrders: response.data.buy_orders.map((buyOrder) => {
+        return {
+          appId: buyOrder.appid,
+          hashName: buyOrder.hash_name,
+          walletCurrency: buyOrder.wallet_currency,
+          price: Number(buyOrder.price),
+          quantity: Number(buyOrder.quantity),
+          quantityRemaining: Number(buyOrder.quantity_remaining),
+          buyOrderId: Number(buyOrder.buy_orderid),
+          description: this.processAsset(buyOrder.description),
+        }
+      }),
     }
   }
 
-  public async myHistory (start?: number | null, count?: number | null): Promise<MyHistory> {
+  public async myHistory(
+    start?: number | null,
+    count?: number | null,
+  ): Promise<MyHistory> {
     const response = await this.server.get<MyHistoryResponse>('/myhistory', {
       params: {
         start: start ?? '0',
         count: count ?? '100',
-        norender: '1'
+        norender: '1',
       },
       headers: {
-        Referer: 'https://steamcommunity.com/market',
+        'Referer': 'https://steamcommunity.com/market',
         'X-Prototype-Version': '1.7',
-        'X-Requested-With': 'XMLHttpRequest'
-      }
+        'X-Requested-With': 'XMLHttpRequest',
+      },
     })
 
     return {
@@ -524,44 +612,53 @@ class SteamMarket {
       totalCount: response.data.total_count,
       start: response.data.start,
       assets: this.processAssets(response.data.assets),
-      events: response.data.events.map((event) => ({
-        listingId: Number(event.listingid),
-        purchaseId: Number(event.purchaseid),
-        eventType: event.event_type,
-        timeEvent: event.time_event,
-        timeEventFraction: event.time_event_fraction,
-        steamIdActor: Number(event.steamid_actor),
-        dateEvent: event.date_event
-      })),
-      purchases: Object.values(response.data.purchases).map((purchase) => ({
-        listingId: Number(purchase.listingid),
-        purchaseId: Number(purchase.purchaseid),
-        timeSold: purchase.time_sold,
-        steamIdPurchaser: Number(purchase.steamid_purchaser),
-        needsRollback: purchase.needs_rollback,
-        failed: purchase.failed,
-        asset: this.processAsset(purchase.asset),
-        paidAmount: purchase.paid_amount,
-        paidFee: purchase.paid_fee,
-        currencyId: Number(purchase.currencyid),
-        steamFee: purchase.steam_fee,
-        publisherFee: purchase.publisher_fee,
-        publisherFeePercent: Number(purchase.publisher_fee_percent),
-        publisherFeeApp: purchase.publisher_fee_app,
-        receivedAmount: purchase.received_amount,
-        receivedCurrencyId: Number(purchase.received_currencyid),
-        fundsReturned: purchase.funds_returned,
-        avatarActor: purchase.avatar_actor,
-        personaActor: purchase.persona_actor,
-        fundsHeld: purchase.funds_held,
-        timeFundsHeldUntil: purchase.time_funds_held_until,
-        fundsRevoked: purchase.funds_revoked
-      })),
-      listings: Object.values(response.data.listings).map((listing) => this.processListing(listing))
+      events: response.data.events.map((event) => {
+        return {
+          listingId: Number(event.listingid),
+          purchaseId: Number(event.purchaseid),
+          eventType: event.event_type,
+          timeEvent: event.time_event,
+          timeEventFraction: event.time_event_fraction,
+          steamIdActor: Number(event.steamid_actor),
+          dateEvent: event.date_event,
+        }
+      }),
+      purchases: Object.values(response.data.purchases).map((purchase) => {
+        return {
+          listingId: Number(purchase.listingid),
+          purchaseId: Number(purchase.purchaseid),
+          timeSold: purchase.time_sold,
+          steamIdPurchaser: Number(purchase.steamid_purchaser),
+          needsRollback: purchase.needs_rollback,
+          failed: purchase.failed,
+          asset: this.processAsset(purchase.asset),
+          paidAmount: purchase.paid_amount,
+          paidFee: purchase.paid_fee,
+          currencyId: Number(purchase.currencyid),
+          steamFee: purchase.steam_fee,
+          publisherFee: purchase.publisher_fee,
+          publisherFeePercent: Number(purchase.publisher_fee_percent),
+          publisherFeeApp: purchase.publisher_fee_app,
+          receivedAmount: purchase.received_amount,
+          receivedCurrencyId: Number(purchase.received_currencyid),
+          fundsReturned: purchase.funds_returned,
+          avatarActor: purchase.avatar_actor,
+          personaActor: purchase.persona_actor,
+          fundsHeld: purchase.funds_held,
+          timeFundsHeldUntil: purchase.time_funds_held_until,
+          fundsRevoked: purchase.funds_revoked,
+        }
+      }),
+      listings: Object.values(response.data.listings).map((listing) => {
+        return this.processListing(listing)
+      }),
     }
   }
 
-  public async createBuyOrder (appId: number, options: CreateBuyOrderOptions): Promise<CreateBuyOrder> {
+  public async createBuyOrder(
+    appId: number,
+    options: CreateBuyOrderOptions,
+  ): Promise<CreateBuyOrder> {
     const { marketHashName, price, amount } = options
 
     const response = await this.server.post<CreateBuyOrderResponse>('/createbuyorder', {
@@ -569,26 +666,29 @@ class SteamMarket {
       currency: this.currency,
       appid: appId,
       market_hash_name: marketHashName,
-      price_total: Number((price * amount) / this.units).toFixed(this.digits),
+      price_total: ((price * amount) / this.units).toFixed(this.digits),
       quantity: amount,
       billing_state: '',
-      save_my_address: '0'
+      save_my_address: '0',
     }, {
       headers: {
-        Referer: `https://steamcommunity.com/market/listings/${appId}/${encodeURIComponent(marketHashName)}`,
-        Origin: 'https://steamcommunity.com',
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-      }
+        'Referer': `https://steamcommunity.com/market/listings/${appId}/${encodeURIComponent(marketHashName)}`,
+        'Origin': 'https://steamcommunity.com',
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      },
     })
 
     return {
       _data: response.data,
       success: Boolean(response.data.success),
-      buyOrderId: Number(response.data.buy_orderid)
+      buyOrderId: Number(response.data.buy_orderid),
     }
   }
 
-  public async createSellOrder (appId: number, options: CreateSellOrderOptions): Promise<CreateSellOrder> {
+  public async createSellOrder(
+    appId: number,
+    options: CreateSellOrderOptions,
+  ): Promise<CreateSellOrder> {
     const { assetId, contextId, price, amount } = options
 
     const response = await this.server.post<CreateSellOrderResponse>('/sellitem', {
@@ -597,13 +697,13 @@ class SteamMarket {
       contextid: contextId,
       assetid: assetId,
       amount,
-      price: Number((price * this.units).toFixed(this.digits))
+      price: Number((price * this.units).toFixed(this.digits)),
     }, {
       headers: {
-        Referer: `https://steamcommunity.com/id/${this.vanityURL}/inventory?modal=1&market=1`,
-        Origin: 'https://steamcommunity.com',
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-      }
+        'Referer': `https://steamcommunity.com/id/${this.vanityURL}/inventory?modal=1&market=1`,
+        'Origin': 'https://steamcommunity.com',
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      },
     })
 
     return {
@@ -612,24 +712,24 @@ class SteamMarket {
       requiresConfirmation: Boolean(response.data.requires_confirmation),
       needsMobileConfirmation: response.data.needs_mobile_confirmation,
       needsEmailConfirmation: response.data.needs_email_confirmation,
-      emailDomain: response.data.email_domain
+      emailDomain: response.data.email_domain,
     }
   }
 
-  public async buyOrderStatus (
+  public async buyOrderStatus(
     appId: number,
     marketHashName: string,
-    buyOrderId: number
+    buyOrderId: number,
   ): Promise<BuyOrderStatus> {
     const response = await this.server.get<BuyOrderStatusResponse>('/getbuyorderstatus', {
       params: {
         sessionid: this.sessionId,
-        buy_orderid: buyOrderId
+        buy_orderid: buyOrderId,
       },
       headers: {
-        Referer: `https://steamcommunity.com/market/listings/${appId}/${encodeURIComponent(marketHashName)}`,
-        'X-Requested-With': 'XMLHttpRequest'
-      }
+        'Referer': `https://steamcommunity.com/market/listings/${appId}/${encodeURIComponent(marketHashName)}`,
+        'X-Requested-With': 'XMLHttpRequest',
+      },
     })
 
     return {
@@ -639,38 +739,38 @@ class SteamMarket {
       purchased: response.data.purchased,
       quantity: response.data.quantity,
       quantityRemaining: response.data.quantity_remaining,
-      purchases: response.data.purchases
+      purchases: response.data.purchases,
     }
   }
 
-  public async cancelBuyOrder (buyOrderId: number): Promise<null> {
+  public async cancelBuyOrder(buyOrderId: number): Promise<null> {
     const response = await this.server.post<null>('/cancelbuyorder', {
       sessionid: this.sessionId,
-      buy_orderid: buyOrderId
+      buy_orderid: buyOrderId,
     }, {
       headers: {
-        Referer: 'https://steamcommunity.com/market',
-        Origin: 'https://steamcommunity.com',
+        'Referer': 'https://steamcommunity.com/market',
+        'Origin': 'https://steamcommunity.com',
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
         'X-Prototype-Version': '1.7',
-        'X-Requested-With': 'XMLHttpRequest'
-      }
+        'X-Requested-With': 'XMLHttpRequest',
+      },
     })
 
     return response.data
   }
 
-  public async cancelSellOrder (listingId: string): Promise<[]> {
+  public async cancelSellOrder(listingId: string): Promise<[]> {
     const response = await this.server.post<[]>(`/removelisting/${listingId}`, {
-      sessionid: this.sessionId
+      sessionid: this.sessionId,
     }, {
       headers: {
-        Referer: 'https://steamcommunity.com/market',
-        Origin: 'https://steamcommunity.com',
+        'Referer': 'https://steamcommunity.com/market',
+        'Origin': 'https://steamcommunity.com',
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
         'X-Prototype-Version': '1.7',
-        'X-Requested-With': 'XMLHttpRequest'
-      }
+        'X-Requested-With': 'XMLHttpRequest',
+      },
     })
 
     return response.data
