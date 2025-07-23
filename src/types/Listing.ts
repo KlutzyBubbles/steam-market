@@ -1,7 +1,7 @@
 import { type Asset } from './Asset.js'
 
 export interface Listing {
-  listingId: number
+  listingId: string
   timeCreated?: number | null
   asset: Asset
   steamIdLister?: number | null

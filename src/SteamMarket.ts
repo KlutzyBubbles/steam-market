@@ -125,7 +125,7 @@ class SteamMarket {
 
   private processListing (listing: ListingResponse): Listing {
     return {
-      listingId: Number(listing.listingid),
+      listingId: listing.listingid,
       timeCreated: listing.time_created,
       asset: this.processAsset(listing.asset),
       steamIdLister: Number(listing.steamid_lister),
@@ -660,7 +660,7 @@ class SteamMarket {
     return response.data
   }
 
-  public async cancelSellOrder (listingId: number): Promise<[]> {
+  public async cancelSellOrder (listingId: string): Promise<[]> {
     const response = await this.server.post<[]>(`/removelisting/${listingId}`, {
       sessionid: this.sessionId
     }, {
